@@ -1,17 +1,20 @@
 #!/usr/bin/env node
 
 import React, { useState, useEffect, useMemo, memo } from 'react';
-import { Box, render, Text, useInput, useStdin } from 'ink';
+import { Box, render, Spacer, Text, useInput, useStdin } from 'ink';
 import fs from 'fs';
 import path from 'path';
 
-const buffer = fs.readFileSync(path.join(__dirname, '../english.json'));
-const quoteJson: {
+const quotesBuffer = fs.readFileSync(path.join(__dirname, '../english.json'));
+const quotes: {
   text: string;
   source: string;
-}[] = JSON.parse(buffer as any);
+}[] = JSON.parse(quotesBuffer as any);
 
-const quotes = quoteJson;
+const wordsBuffers = fs.readFileSync(
+  path.join(__dirname, '../english-words.json'),
+);
+const words: string[] = JSON.parse(wordsBuffers as any);
 
 const MemoChar: React.FC<{
   inverse: boolean;
@@ -28,13 +31,31 @@ const MemoChar: React.FC<{
 
 const TypingGame: React.FC = () => {
   const [input, setInput] = useState('');
-  const [quote, setQuote] = useState<{
+  const [test, setTest] = useState<{
     text: string;
-    source: string;
-  }>({ text: '', source: '' });
+    source?: string;
+  }>({ text: '', source: undefined });
   const [beginTime, setBeginTime] = useState<null | Date>(null);
+  const [mode, setMode] = useState<'Words' | 'Quotes'>('Quotes');
 
   const { setRawMode } = useStdin();
+
+  const generateTest = (): { text: string; source?: string } => {
+    if (mode === 'Quotes') {
+      return quotes[Math.floor(Math.random() * quotes.length)];
+    }
+
+    const wordAmount = 100;
+    let wordsArray: string[] = [];
+    for (let i = 0; i < wordAmount; ++i) {
+      wordsArray = [
+        ...wordsArray,
+        words[Math.floor(Math.random() * words.length)],
+      ];
+    }
+
+    return { text: wordsArray.join(' ') };
+  };
 
   useEffect(() => {
     setRawMode(true);
@@ -42,16 +63,21 @@ const TypingGame: React.FC = () => {
     return () => {
       setRawMode(false);
     };
-  });
+  }, []);
+
+  useEffect(() => {
+    setTest(generateTest());
+    setInput('');
+    setBeginTime(null);
+  }, [mode]);
 
   useInput((value, key) => {
-    if (key.backspace && key.meta) {
-      const words = input.split(' ');
-      const previous = words.slice(0, -1);
-      setInput(previous.join(' '));
+    if (key.tab) {
+      setMode(mode === 'Quotes' ? 'Words' : 'Quotes');
+      return;
     }
     if (key.return) {
-      setQuote({ ...quotes[Math.floor(Math.random() * quotes.length)] });
+      setTest(generateTest());
       setInput('');
       setBeginTime(null);
       return;
@@ -64,8 +90,8 @@ const TypingGame: React.FC = () => {
   });
 
   useEffect(() => {
-    if (input.length > quote.text.length || !quote.text.length) {
-      setQuote({ ...quotes[Math.floor(Math.random() * quotes.length)] });
+    if (input.length > test.text.length || !test.text.length) {
+      setTest(generateTest());
       setInput('');
       setBeginTime(null);
     }
@@ -74,14 +100,14 @@ const TypingGame: React.FC = () => {
     }
   });
 
-  const quoteArray = useMemo(() => quote.text.split(''), [quote]);
+  const quoteArray = useMemo(() => test.text.split(''), [test]);
 
   const timePassed = beginTime && new Date().getTime() - beginTime.getTime();
 
   const accuracy = useMemo(() => {
     let hits = 0;
     for (let i = 0; i < input.length; ++i) {
-      if (quote.text[i] === input[i]) {
+      if (test.text[i] === input[i]) {
         hits++;
       }
     }
@@ -100,18 +126,22 @@ const TypingGame: React.FC = () => {
       borderStyle={'round'}
       borderColor={'magenta'}
     >
-      <Box
-        height={1}
-        width={8}
-        flexDirection="row"
-        justifyContent="space-between"
-      >
-        <Text bold>{wpm?.toFixed(0)}</Text>
-        <Text bold> </Text>
-        <Text dimColor bold>
-          {wpm !== null ? `${accuracy.toFixed(0)}%` : null}
-        </Text>
+      <Box alignSelf={'flex-end'}>
+        <Text color={'cyanBright'}>{mode}</Text>
       </Box>
+      <Box flexDirection="column">
+        <Box>
+          <Text dimColor>Accuracy: </Text>
+          <Text dimColor bold>
+            {!!input.length && wpm !== null ? `${accuracy.toFixed(0)}%` : null}
+          </Text>
+        </Box>
+        <Box width={8}>
+          <Text dimColor>WPM: </Text>
+          <Text bold>{!!input.length && wpm?.toFixed(0)}</Text>
+        </Box>
+      </Box>
+      <Box height={1}></Box>
       <Box flexDirection="row">
         <Text>
           {quoteArray.map((char, index) => {
@@ -123,7 +153,7 @@ const TypingGame: React.FC = () => {
               : isWrong
               ? 'yellow'
               : undefined;
-            const inverse = input.length === index;
+            const inverse = input.length === index && index > 0;
 
             return (
               <MemoChar
@@ -137,13 +167,21 @@ const TypingGame: React.FC = () => {
           })}
         </Text>
       </Box>
-      <Box alignSelf="flex-end">
-        <Text italic dimColor>
-          - {quote.source}
-        </Text>
+      <Box minHeight={1} alignSelf="flex-end">
+        {test.source ? (
+          <Text italic dimColor>
+            - {test.source}
+          </Text>
+        ) : null}
+      </Box>
+      <Box flexDirection="column">
+        <Text dimColor>[Enter] Next test</Text>
+        <Text dimColor>[Tab] Switch mode</Text>
       </Box>
     </Box>
   );
 };
 
-render(<TypingGame />);
+const { clear } = render(<TypingGame />);
+
+clear();
