@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
 import React, { useState, useEffect, useMemo, memo } from 'react';
-import { Box, render, Spacer, Text, useInput, useStdin } from 'ink';
+import { Box, render, Text, useInput, useStdin } from 'ink';
 import fs from 'fs';
 import path from 'path';
+import { getCurrentVersionInfo, getVersionInfo } from './get-updates';
 
 const quotesBuffer = fs.readFileSync(path.join(__dirname, '../english.json'));
 const quotes: {
@@ -37,6 +38,8 @@ const TypingGame: React.FC = () => {
   }>({ text: '', source: undefined });
   const [beginTime, setBeginTime] = useState<null | Date>(null);
   const [mode, setMode] = useState<'Words' | 'Quotes'>('Quotes');
+  const [version, setVersion] = useState('');
+  const [latestVersion, setLatestVersion] = useState<null | string>(null);
 
   const { setRawMode } = useStdin();
 
@@ -56,6 +59,15 @@ const TypingGame: React.FC = () => {
 
     return { text: wordsArray.join(' ') };
   };
+
+  useEffect(() => {
+    setVersion(getCurrentVersionInfo());
+    getVersionInfo()
+      .then((data) => {
+        setLatestVersion(data);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     setRawMode(true);
@@ -174,9 +186,20 @@ const TypingGame: React.FC = () => {
           </Text>
         ) : null}
       </Box>
-      <Box flexDirection="column">
-        <Text dimColor>[Enter] Next test</Text>
-        <Text dimColor>[Tab] Switch mode</Text>
+      <Box height={1}></Box>
+      <Box flexDirection="row" justifyContent="space-between">
+        <Box flexDirection="column">
+          <Text dimColor>[Enter] Next test</Text>
+          <Text dimColor>[Tab] Switch mode</Text>
+        </Box>
+        <Box alignSelf="flex-end" flexDirection="column" alignItems="flex-end">
+          {latestVersion !== null && version !== latestVersion ? (
+            <Text color={'yellowBright'}>
+              Update available, run "npm install -g keysi"
+            </Text>
+          ) : null}
+          <Text dimColor>Version: {version}</Text>
+        </Box>
       </Box>
     </Box>
   );
