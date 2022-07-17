@@ -3,8 +3,9 @@
 import React, { useState, useEffect, useMemo, memo } from 'react';
 import { Box, render, Text, useInput, useStdin } from 'ink';
 import fs from 'fs';
+import path from 'path';
 
-const buffer = fs.readFileSync('english.json');
+const buffer = fs.readFileSync(path.join(__dirname, '../english.json'));
 const quoteJson: {
   text: string;
   source: string;
