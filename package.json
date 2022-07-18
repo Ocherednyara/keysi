@@ -1,13 +1,13 @@
 {
   "name": "keysi",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "",
   "main": "index.js",
   "module": "node",
   "scripts": {
     "start": "node ./dist/index.js",
-    "build": "tsc",
-    "prepublish": "tsc"
+    "build": "tsc && cp -r tests ./dist/tests && cp package.json ./dist/package.json",
+    "prepublish": "npm run build"
   },
   "repository": {
     "type": "git",

@@ -1,6 +1,7 @@
 import https from 'https';
 import fs from 'fs';
 import path from 'path';
+import { environment } from '../../environment';
 
 export async function getVersionInfo(): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -33,7 +34,9 @@ export async function getVersionInfo(): Promise<string> {
 }
 
 export function getCurrentVersionInfo(): string {
-  const packageJson = fs.readFileSync(path.join(__dirname, '../package.json'));
+  const packageJson = fs.readFileSync(
+    path.join(environment.rootDirectory, 'package.json'),
+  );
   const packageObject = JSON.parse(packageJson as any) as { version: string };
   return packageObject.version;
 }
