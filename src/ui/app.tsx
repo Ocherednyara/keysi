@@ -23,8 +23,8 @@ export const App: React.FC = () => {
   }, []);
 
   const setupTest = () => {
-    setTest(generateTest(mode));
     setInput('');
+    setTest(generateTest(mode));
     setBeginTime(null);
   };
 
