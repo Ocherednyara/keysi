@@ -85,7 +85,7 @@ export const App: React.FC = () => {
       padding={1}
       paddingX={3}
       flexDirection="column"
-      borderStyle={'round'}
+      borderStyle={'bold'}
       borderColor={'magenta'}
     >
       <Box alignSelf={'flex-end'}>
