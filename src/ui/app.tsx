@@ -70,7 +70,10 @@ export const App: React.FC = () => {
 
   const timePassed = beginTime && new Date().getTime() - beginTime.getTime();
   const wpm = timePassed
-    ? (accuracy / 100) * (input.length / 4.7 / (timePassed / 60000))
+    ? Math.min(
+        (accuracy / 100) * (input.length / 4.7 / (timePassed / 60000)),
+        999,
+      )
     : null;
 
   if (clearScreen) {
