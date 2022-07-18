@@ -42,7 +42,7 @@ export const Footer: React.FC = () => {
         <Text color={'yellow'}>
           Update available, run{' '}
           <Text bold color={'yellowBright'}>
-            `npm update keysi`
+            `npm install -g keysi`
           </Text>
         </Text>
       ) : null}
