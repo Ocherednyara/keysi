@@ -24,4 +24,5 @@ Limitation/bug in Node.js `process.stdin` where backspace key does not register 
 #### Why does it flicker?
 Some terminals work far better than others, I have no idea why and I'm unlikely to investigate it as I don't know the first thing about terminal emulation. Recommended terminals that I've tested are iTerm (macOS), Terminal (macOS) and Command Prompt (Windows).
 
-
+#### Why does it look different on my machine?
+How the application looks will depend on the terminal's font.
