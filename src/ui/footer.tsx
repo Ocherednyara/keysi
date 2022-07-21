@@ -32,6 +32,9 @@ export const Footer: React.FC = () => {
           <Text dimColor>[Enter] Next test</Text>
           <Text dimColor>[Tab] Switch mode</Text>
           <Text dimColor>[Esc] Exit</Text>
+          <Text dimColor>[Shift+Q] Offline</Text>
+          <Text dimColor>[Shift+W] Client</Text>
+          <Text dimColor>[Shift+E] Server</Text>
         </Box>
         <Box alignSelf="flex-end" flexDirection="column" alignItems="flex-end">
           <Text dimColor>Version: {version}</Text>

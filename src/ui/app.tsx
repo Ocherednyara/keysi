@@ -3,6 +3,23 @@ import { Box, Text, useApp, useInput, useStdin } from 'ink';
 import { Footer } from './footer';
 import { MemoChar } from './memo-char';
 import { generateTest, Test, TestMode } from '../core/generate-test';
+const keypress = require('keypress');
+
+// make `process.stdin` begin emitting "keypress" events
+keypress(process.stdin);
+
+// listen for the "keypress" event
+process.stdin.on('keypress', function (ch, key) {
+  console.log('got "keypress"', key);
+  if (key && key.ctrl && key.name == 'c') {
+    process.stdin.pause();
+  }
+});
+
+process.stdin.setRawMode(true);
+process.stdin.resume();
+
+type Cursor = { index: number; color: string };
 
 export const App: React.FC = () => {
   const [input, setInput] = useState('');
@@ -10,21 +27,32 @@ export const App: React.FC = () => {
   const [beginTime, setBeginTime] = useState<null | Date>(null);
   const [mode, setMode] = useState<TestMode>('Quotes');
 
-  const { setRawMode } = useStdin();
+  const [playMode, setPlayMode] = useState<'Server' | 'Client' | 'Offline'>(
+    'Offline',
+  );
+
+  // const server = useServer({ enabled: playMode === 'Server' });
+  // const client = useConnection({ enabled: playMode === 'Client' });
+
+  const { setRawMode, stdin } = useStdin();
   const { exit } = useApp();
   const [clearScreen, setClearScreen] = useState(false);
 
   useEffect(() => {
-    setRawMode(true);
+    // setRawMode(true);
+    // stdin?.on('keypress', (data) => {
+    //   console.log(data.toString());
+    // });
 
     return () => {
-      setRawMode(false);
+      // setRawMode(false);
     };
   }, []);
 
-  const setupTest = () => {
+  const setupTest = (initTest?: Test) => {
+    const test = initTest ?? generateTest(mode);
     setInput('');
-    setTest(generateTest(mode));
+    setTest(test);
     setBeginTime(null);
   };
 
@@ -42,6 +70,7 @@ export const App: React.FC = () => {
   });
 
   useInput((value, key) => {
+    // console.log(value.charAt(0), value.charCodeAt(0), key);
     if (key.escape) {
       setClearScreen(true);
       exit();
@@ -51,6 +80,12 @@ export const App: React.FC = () => {
       setupTest();
     } else if (key.backspace || key.delete) {
       setInput(input.slice(0, -1));
+    } else if (key.shift && value === 'Q') {
+      setPlayMode('Offline');
+    } else if (key.shift && value === 'W') {
+      setPlayMode('Client');
+    } else if (key.shift && value === 'E') {
+      setPlayMode('Server');
     } else {
       setInput(input + value);
     }
@@ -90,6 +125,8 @@ export const App: React.FC = () => {
     >
       <Box alignSelf={'flex-end'}>
         <Text color={'cyanBright'}>{mode}</Text>
+        <Text> </Text>
+        <Text color={'cyan'}>{playMode}</Text>
       </Box>
       <Box flexDirection="column">
         <Box>
